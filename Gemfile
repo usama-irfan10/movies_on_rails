@@ -47,3 +47,7 @@ gem "csv", "~> 3.3"
 gem "active_model_serializers", "~> 0.10"
 
 gem "rack-attack", "~> 6.8"
+
+gem "bcrypt", "~> 3.1"
+
+gem "letter_opener", "~> 1.10", group: :development

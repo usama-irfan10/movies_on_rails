@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  resource :session, only: %i[new create destroy]
+  resources :passwords, param: :token, only: %i[new create edit update]
+
   root "movies#index"
   resources :movies, only: :index
 

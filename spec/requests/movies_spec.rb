@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe "Movies overview", type: :request do
+  before { sign_in }
+
   let!(:alpha) do
     create(:movie, title: "Alpha Film", actors: [ create(:actor, name: "Nicolas Cage") ], locations: [ create(:location, name: "Lone Pine") ])
       .tap { |movie| create(:review, movie:, stars: 5) }
