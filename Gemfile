@@ -43,3 +43,5 @@ gem "factory_bot_rails", "~> 6.5", groups: [ :development, :test ]
 gem "shoulda-matchers", "~> 8.0", group: :test
 
 gem "csv", "~> 3.3"
+
+gem "active_model_serializers", "~> 0.10"
