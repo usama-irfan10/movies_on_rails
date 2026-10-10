@@ -11,7 +11,12 @@ export ADDITIONAL_HOSTS="${ADDITIONAL_HOSTS:-$VERCEL_URL,$VERCEL_BRANCH_URL}"
 # which do not work through a transaction-mode connection pooler.
 export DATABASE_URL="${DATABASE_URL_UNPOOLED:-$DATABASE_URL}"
 
-# Creates the schema and loads the catalog on an empty database, migrates otherwise.
-./bin/rails db:prepare
+# Prepare the database only when the newest migration has not run yet: on an empty
+# database db:prepare creates the schema and loads the catalog, otherwise it migrates.
+# Skipping it on warm databases saves a second Rails boot on every cold start.
+latest_migration=$(ls db/migrate | sort | tail -1 | cut -d_ -f1)
+if ! psql "$DATABASE_URL" -tAc "SELECT 1 FROM schema_migrations WHERE version = '$latest_migration'" 2>/dev/null | grep -q 1; then
+  ./bin/rails db:prepare
+fi
 
 exec bundle exec puma -C config/puma.rb

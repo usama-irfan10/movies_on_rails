@@ -2,7 +2,8 @@
 # Production image for Vercel's container runtime (https://vercel.com/docs/functions/runtimes/container).
 # Same build as ./Dockerfile, adapted to the platform:
 #   - the app may only write to /tmp, so tmp/ points there
-#   - the instance stops when idle, so it prepares the database on every start (bin/vercel-start)
+#   - the instance stops when idle and boots on demand, so boot caches are built into the image
+#     and the database is only prepared when there are pending migrations (bin/vercel-start)
 #   - a demo account is seeded on the first start (SEED_DEMO_USER)
 
 ARG RUBY_VERSION=3.3.12
@@ -19,7 +20,8 @@ ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
     BUNDLE_WITHOUT="development:test" \
-    LD_PRELOAD="/usr/local/lib/libjemalloc.so"
+    LD_PRELOAD="/usr/local/lib/libjemalloc.so" \
+    BOOTSNAP_CACHE_DIR="/rails/.bootsnap"
 
 FROM base AS build
 
@@ -33,7 +35,8 @@ RUN bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git
 
 COPY . .
-RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
+RUN bundle exec bootsnap precompile -j 1 --gemfile app/ lib/ && \
+    SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 
 FROM base
 
@@ -48,7 +51,9 @@ RUN rm -rf /rails/tmp && ln -s /tmp/rails /rails/tmp
 
 USER 1000:1000
 
+# The boot cache is read-only at runtime.
 ENV PORT="3000" \
+    BOOTSNAP_READONLY="1" \
     SEED_DEMO_USER="true"
 EXPOSE 3000
 
