@@ -45,3 +45,5 @@ gem "shoulda-matchers", "~> 8.0", group: :test
 gem "csv", "~> 3.3"
 
 gem "active_model_serializers", "~> 0.10"
+
+gem "rack-attack", "~> 6.8"
