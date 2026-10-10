@@ -1,5 +1,7 @@
 # Movies on Rails
 
+[![CI](https://github.com/usama-irfan10/movies_on_rails/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/usama-irfan10/movies_on_rails/actions/workflows/ci.yml)
+
 Backend for a small movie review platform: CSV import, a searchable and sortable movie
 overview, and a token-protected JSON API. Rails 8 · PostgreSQL · RSpec · ActiveModelSerializers.
 
