@@ -1,0 +1,55 @@
+<% content_for :title, "Movies" %>
+
+<%= form_with url: movies_path, method: :get, class: "filters" do %>
+  <div class="field">
+    <%= label_tag :actor, "Actor name" %>
+    <%= search_field_tag :actor, @query, placeholder: "e.g. Leonardo or Cage", maxlength: Movie::MAX_SEARCH_LENGTH %>
+  </div>
+  <div class="field">
+    <%= label_tag :sort, "Sort by" %>
+    <%= select_tag :sort, options_for_select(sort_options, @sort) %>
+  </div>
+  <%= submit_tag "Search", name: nil %>
+<% end %>
+
+<% if @pagination.total_count.zero? %>
+  <p class="empty">
+    <% if @query.present? %>
+      No movies with an actor matching “<%= @query %>”.
+      Try part of an actor's name, or <%= link_to "clear the search", movies_path(sort: @sort) %>.
+    <% else %>
+      No movies yet. Run <code>bin/rails import:all</code> to load the catalog.
+    <% end %>
+  </p>
+<% elsif @pagination.out_of_range? %>
+  <p class="empty">
+    There is no page <%= @pagination.page %>.
+    <%= link_to "Go to the first page", movies_path(actor: @query.presence, sort: @sort) %>.
+  </p>
+<% else %>
+  <p class="count"><%= pluralize(@pagination.total_count, "movie") %></p>
+  <ul class="movies">
+    <% @movies.each do |movie| %>
+      <li class="movie">
+        <div class="movie-heading">
+          <h2><%= movie.title %> <span class="year"><%= movie.year %></span></h2>
+          <span class="rating"><%= rating_label(movie) %></span>
+        </div>
+        <% if movie.description.present? %>
+          <p><%= movie.description %></p>
+        <% end %>
+        <dl>
+          <dt>Director</dt><dd><%= movie.director %></dd>
+          <% if movie.actors.any? %>
+            <dt>Cast</dt><dd><%= cast_list(movie) %></dd>
+          <% end %>
+          <% if movie.locations.any? %>
+            <dt>Filmed in</dt><dd><%= locations_list(movie) %></dd>
+          <% end %>
+        </dl>
+      </li>
+    <% end %>
+  </ul>
+
+  <%= render "shared/pagination", pagination: @pagination, query: @query, sort: @sort %>
+<% end %>
