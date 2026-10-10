@@ -7,6 +7,8 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
+      post "tokens", to: "tokens#create"
+      delete "tokens", to: "tokens#destroy"
       resources :movies, only: %i[index show] do
         resources :reviews, only: :index
       end

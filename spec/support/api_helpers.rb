@@ -1,7 +1,9 @@
 module ApiHelpers
-  # Headers sent with every API request in specs.
+  # Headers sent with every API request in specs: a valid bearer token.
+  # Memoized, so the token is created once per example (call api_headers early
+  # if an example counts queries).
   def api_headers
-    {}
+    @api_headers ||= { "Authorization" => "Bearer #{ApiToken.issue_for(create(:user)).plaintext}" }
   end
 
   def api_get(path, **options)
