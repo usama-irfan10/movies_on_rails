@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  # Development only: lists emails sent by the app (see config/initializers/action_mailer.rb).
+  mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?
+
   resource :session, only: %i[new create destroy]
   resources :passwords, param: :token, only: %i[new create edit update]
 

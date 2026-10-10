@@ -1,5 +1,7 @@
 # Mail settings (used for password reset emails).
-#   development: letter_opener opens each message in the browser (no SMTP needed)
+#   development: letter_opener opens each message in the browser (no SMTP needed).
+#                Inside Docker there is no browser to open, so emails are listed
+#                at http://localhost:3000/letter_opener instead.
 #   test:        messages are collected in memory
 #   production:  delivery is intentionally not configured here - add it when you deploy
 Rails.application.configure do
@@ -13,7 +15,7 @@ Rails.application.configure do
   if Rails.env.test?
     config.action_mailer.delivery_method = :test
   elsif Rails.env.development?
-    config.action_mailer.delivery_method = :letter_opener
+    config.action_mailer.delivery_method = ENV["DOCKER"].present? ? :letter_opener_web : :letter_opener
     config.action_mailer.perform_deliveries = true
   end
 end

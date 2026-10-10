@@ -51,3 +51,5 @@ gem "rack-attack", "~> 6.8"
 gem "bcrypt", "~> 3.1"
 
 gem "letter_opener", "~> 1.10", group: :development
+
+gem "letter_opener_web", "~> 3.0", group: :development
