@@ -1,0 +1,17 @@
+#!/bin/bash -e
+# Starts the app on Vercel's container runtime (see Dockerfile.vercel).
+
+mkdir -p /tmp/rails/pids /tmp/rails/cache
+
+# Links in emails use the production domain unless APP_HOST is set explicitly.
+export APP_HOST="${APP_HOST:-$VERCEL_PROJECT_PRODUCTION_URL}"
+# Also answer on the per-deployment and per-branch URLs.
+export ADDITIONAL_HOSTS="${ADDITIONAL_HOSTS:-$VERCEL_URL,$VERCEL_BRANCH_URL}"
+# Neon's direct (unpooled) connection: migrations and the importer use advisory locks,
+# which do not work through a transaction-mode connection pooler.
+export DATABASE_URL="${DATABASE_URL_UNPOOLED:-$DATABASE_URL}"
+
+# Creates the schema and loads the catalog on an empty database, migrates otherwise.
+./bin/rails db:prepare
+
+exec bundle exec puma -C config/puma.rb

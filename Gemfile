@@ -50,9 +50,9 @@ gem "rack-attack", "~> 6.8"
 
 gem "bcrypt", "~> 3.1"
 
-gem "letter_opener", "~> 1.10", group: :development
-
-gem "letter_opener_web", "~> 3.0", group: :development
+# Email previews: development, and the optional password-protected inbox in production
+gem "letter_opener", "~> 1.10"
+gem "letter_opener_web", "~> 3.0"
 
 gem "dotenv-rails", "~> 3.2", groups: [ :development, :test ]
 

@@ -7,6 +7,8 @@ if Rails.env.production? && ENV["SECRET_KEY_BASE_DUMMY"].blank?
   missing = required.select { |name| ENV[name].blank? }
   raise "Missing required environment variables: #{missing.join(', ')}. See .env.example." if missing.any?
 
-  Rails.application.config.hosts << ENV.fetch("APP_HOST").split(":").first
+  # APP_HOST plus any extra names (comma separated), e.g. a hosting platform's deployment URL.
+  hosts = [ ENV.fetch("APP_HOST"), *ENV.fetch("ADDITIONAL_HOSTS", "").split(",") ]
+  hosts.map(&:strip).compact_blank.each { |host| Rails.application.config.hosts << host.split(":").first }
   Rails.application.config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end

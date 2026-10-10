@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
-  # Development only: lists emails sent by the app (see config/initializers/action_mailer.rb).
-  mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?
+  # Lists emails sent by the app: always in development, and in production only when
+  # the inbox credentials are set (see config/initializers/action_mailer.rb).
+  mount LetterOpenerWeb::Engine, at: "/letter_opener" if MailInbox.enabled?
 
   # API documentation (Swagger UI); the rswag gems are not installed in production.
   unless Rails.env.production?

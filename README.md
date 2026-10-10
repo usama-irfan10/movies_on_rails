@@ -316,15 +316,37 @@ a PostgreSQL service, and checks that `swagger/v1/openapi.yaml` matches the spec
 - Rails generated a production `Dockerfile`; build it with `docker build -t movies_on_rails .`
   and pass the variables above with `-e`. `Dockerfile.dev` and `docker-compose.yml` are for
   development and tests only.
-- **Email.** Production delivery is intentionally not configured. Set
-  `config.action_mailer.delivery_method` (and its settings) in `config/environments/production.rb`
-  before relying on password reset.
+- **Email.** Real email delivery is intentionally not configured. For a demo deployment,
+  set `MAIL_INBOX_USERNAME` and `MAIL_INBOX_PASSWORD`: emails are then kept in a web inbox at
+  `/letter_opener`, protected by HTTP basic auth (and rate limited). Without them no email is
+  sent. For real email, set `config.action_mailer.delivery_method` (SMTP or an email API) in
+  `config/environments/production.rb`.
 - **Shared cache.** Rack::Attack and `rate_limit` count requests in `Rails.cache`. With several
   servers, configure a shared cache store (Redis, Solid Cache or Memcached) so limits apply
   across processes.
 - **Background jobs.** Reset emails are sent with `deliver_later`; the default in-process
   adapter is fine for one server. Use a real queue adapter if you scale out.
 - Schedule `bin/rails auth:prune` daily.
+
+### Deploying to Vercel
+
+`Dockerfile.vercel` runs the app on [Vercel's container runtime](https://vercel.com/docs/functions/runtimes/container),
+with a free [Neon](https://neon.com) Postgres database from the Vercel Marketplace.
+
+1. Import the GitHub repository as a new Vercel project (no build settings needed: Vercel
+   detects `Dockerfile.vercel`).
+2. In the project's **Storage** tab, add a Neon database. It sets `DATABASE_URL` and
+   `DATABASE_URL_UNPOOLED`; the app uses the unpooled one.
+3. Add environment variables: `SECRET_KEY_BASE` (`bin/rails secret`), `PORT=3000`, and
+   optionally `MAIL_INBOX_USERNAME` / `MAIL_INBOX_PASSWORD` for the email inbox.
+   `APP_HOST` defaults to the project's production domain.
+4. Deploy. On start, `bin/vercel-start` runs `bin/rails db:prepare`, which creates the schema,
+   imports the bundled CSV files and adds the demo account on an empty database, and only
+   migrates afterwards.
+
+Things to know: idle instances stop after a few minutes, so the first request afterwards
+takes a few seconds; rate limits are counted per instance (in-memory cache); and the email
+inbox lives in the instance's `/tmp`, so messages disappear when it stops.
 
 ## Troubleshooting
 

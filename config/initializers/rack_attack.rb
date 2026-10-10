@@ -13,6 +13,11 @@ Rack::Attack.throttle("passwords/ip", limit: 5, period: 15.minutes) do |request|
   request.ip if request.post? && request.path == "/passwords"
 end
 
+# The production mail inbox is behind basic auth; slow down password guessing there too.
+Rack::Attack.throttle("letter_opener/ip", limit: 30, period: 1.minute) do |request|
+  request.ip if request.path.start_with?("/letter_opener")
+end
+
 Rack::Attack.throttled_responder = lambda do |request|
   retry_after = request.env.fetch("rack.attack.match_data", {})[:period].to_s
   headers = { "Retry-After" => retry_after }
