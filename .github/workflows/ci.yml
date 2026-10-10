@@ -55,3 +55,7 @@ jobs:
           bundler-cache: true
       - run: bin/rails db:create db:schema:load
       - run: bundle exec rspec
+      - name: Check the API docs match the specs
+        run: |
+          bin/rails rswag:specs:swaggerize
+          git diff --exit-code swagger/ || (echo "swagger/ is out of date: run RAILS_ENV=test bin/rails rswag:specs:swaggerize and commit" && exit 1)

@@ -10,6 +10,7 @@ overview, and a token-protected JSON API. Rails 8 · PostgreSQL · RSpec · Acti
 - [Using the app](#using-the-app)
 - [Importing data](#importing-data)
 - [API reference](#api-reference)
+- [API documentation (OpenAPI)](#api-documentation-openapi)
 - [Authentication](#authentication)
 - [Design decisions](#design-decisions)
 - [Security](#security)
@@ -91,6 +92,8 @@ Prefix with `docker compose run --rm web` to run inside Docker.
 | Lint | `bin/rubocop` (auto-fix: `bin/rubocop -A`) |
 | Security scan | `bin/brakeman` |
 | Dependency audit | `bundle exec bundler-audit check --update` |
+| Regenerate the API docs | `RAILS_ENV=test bin/rails rswag:specs:swaggerize` |
+| Run only the API contract specs | `bundle exec rspec spec/api` |
 | Specs in Docker | `docker compose run --rm -e RAILS_ENV=test web bash -c "bin/rails db:create db:schema:load && bundle exec rspec"` |
 
 ## Using the app
@@ -103,6 +106,7 @@ Prefix with `docker compose run --rm web` to run inside Docker.
 | Sign in / out | `/session/new` |
 | Reset a forgotten password | `/passwords/new` |
 | Emails sent in development (Docker only) | `/letter_opener` |
+| Interactive API docs (Swagger UI; not in production) | `/api-docs` |
 | Health check (public) | `/up` |
 
 All pages except sign-in, password reset and the health check require a login. There is no
@@ -189,6 +193,27 @@ response adds `description` and `locations` (`name`, `country`). Reviews have `i
 `user_name`, `stars`, `comment` and `created_at`; they are paginated separately so a popular
 movie cannot produce an unbounded response.
 
+## API documentation (OpenAPI)
+
+The API is described in [`swagger/v1/openapi.yaml`](swagger/v1/openapi.yaml) (OpenAPI 3.0).
+With the server running, open http://localhost:3000/api-docs for Swagger UI: click
+**Authorize**, paste a token from `POST /api/v1/tokens`, and try each endpoint.
+
+The document is generated, not hand-written. The specs in `spec/api` describe every endpoint
+with [rswag](https://github.com/rswag/rswag), and running them checks each real response
+against the documented schema (unexpected or missing fields fail the test). After changing
+the API, update those specs and regenerate:
+
+```bash
+bundle exec rspec spec/api                          # contract tests
+RAILS_ENV=test bin/rails rswag:specs:swaggerize     # rewrite swagger/v1/openapi.yaml
+```
+
+CI fails if the committed document is out of date. The response schemas live in
+`spec/swagger_helper.rb`. Swagger UI is not mounted in production, because the rswag gems
+are only installed for development and test; the YAML file can be opened in any OpenAPI
+viewer (for example https://editor.swagger.io).
+
 ## Authentication
 
 **Web UI - cookie sessions** (modelled on the Rails 8 authentication generator).
@@ -248,7 +273,8 @@ app/
 lib/tasks/            import.rake, users.rake, auth.rake
 config/initializers/  action_mailer, rack_attack, content_security_policy, app_environment
 db/data/              the two CSV files
-spec/                 models, services, requests, mailers, factories
+spec/                 models, services, requests, mailers, factories; spec/api = OpenAPI contract specs
+swagger/v1/           openapi.yaml, generated from spec/api
 ```
 
 ## Security
@@ -271,14 +297,14 @@ spec/                 models, services, requests, mailers, factories
 ## Testing and quality
 
 ```bash
-bundle exec rspec          # models, importer, HTML pages, API, authentication, throttling
+bundle exec rspec          # models, importer, HTML pages, API, API contract, authentication, throttling
 bin/rubocop                # style (rails-omakase)
 bin/brakeman               # security static analysis
 bundle exec bundler-audit check --update
 ```
 
 GitHub Actions (`.github/workflows/ci.yml`) runs the scan, audit, lint and test jobs against
-a PostgreSQL service.
+a PostgreSQL service, and checks that `swagger/v1/openapi.yaml` matches the specs.
 
 ## Production notes
 

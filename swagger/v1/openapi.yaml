@@ -1,0 +1,459 @@
+---
+openapi: 3.0.3
+info:
+  title: Movies on Rails API
+  version: v1
+  description: |
+    Read-only access to the movie catalog.
+
+    **Authentication.** Exchange an email address and password for a bearer token with
+    `POST /api/v1/tokens`, then send `Authorization: Bearer <token>` with every other request.
+    Tokens are valid for 30 days and can be revoked with `DELETE /api/v1/tokens`.
+
+    **Rate limits.** 120 requests per minute per IP address, and 10 token requests per minute.
+    Throttled requests get `429 Too Many Requests` with a `Retry-After` header.
+
+    **Errors** are returned as `{"error": "..."}`.
+servers:
+- url: "/"
+  description: This server
+security:
+- bearer: []
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      description: Token from POST /api/v1/tokens
+  schemas:
+    Movie:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - title
+      - year
+      - director
+      - average_stars
+      - reviews_count
+      - actors
+      properties:
+        id:
+          type: integer
+          example: 2
+        title:
+          type: string
+          example: Inception
+        year:
+          type: integer
+          example: 2010
+        director:
+          type: string
+          example: Christopher Nolan
+        average_stars:
+          type: number
+          nullable: true
+          minimum: 1
+          maximum: 5
+          example: 2.75
+          description: Average of all review stars, rounded to 2 decimals; null while
+            the movie has no reviews
+        reviews_count:
+          type: integer
+          minimum: 0
+          example: 4
+        actors:
+          type: array
+          items:
+            type: string
+          example:
+          - Ellen Page
+          - Giovani Ribisi
+          - Joseph Gordon Levitt
+          - Leonardo Di Caprio
+          description: Actor names, alphabetical
+    MovieDetail:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - title
+      - year
+      - director
+      - average_stars
+      - reviews_count
+      - actors
+      - description
+      - locations
+      properties:
+        id:
+          type: integer
+          example: 2
+        title:
+          type: string
+          example: Inception
+        year:
+          type: integer
+          example: 2010
+        director:
+          type: string
+          example: Christopher Nolan
+        average_stars:
+          type: number
+          nullable: true
+          minimum: 1
+          maximum: 5
+          example: 2.75
+          description: Average of all review stars, rounded to 2 decimals; null while
+            the movie has no reviews
+        reviews_count:
+          type: integer
+          minimum: 0
+          example: 4
+        actors:
+          type: array
+          items:
+            type: string
+          example:
+          - Ellen Page
+          - Giovani Ribisi
+          - Joseph Gordon Levitt
+          - Leonardo Di Caprio
+          description: Actor names, alphabetical
+        description:
+          type: string
+          nullable: true
+          example: A thief who steals corporate secrets through the use of dream-sharing
+            technology...
+        locations:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Location"
+          description: Filming locations, by country then name
+    Location:
+      type: object
+      additionalProperties: false
+      required:
+      - name
+      - country
+      properties:
+        name:
+          type: string
+          example: BedfordShire
+        country:
+          type: string
+          example: UK
+    Review:
+      type: object
+      additionalProperties: false
+      required:
+      - id
+      - user_name
+      - stars
+      - comment
+      - created_at
+      properties:
+        id:
+          type: integer
+          example: 9
+        user_name:
+          type: string
+          example: Sam Pedro
+        stars:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 2
+        comment:
+          type: string
+          nullable: true
+          example: Empty
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-10-08T10:00:00.000Z'
+    PaginationMeta:
+      type: object
+      additionalProperties: false
+      required:
+      - current_page
+      - per_page
+      - total_pages
+      - total_count
+      properties:
+        current_page:
+          type: integer
+          minimum: 1
+          example: 1
+        per_page:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 20
+        total_pages:
+          type: integer
+          minimum: 1
+          example: 1
+        total_count:
+          type: integer
+          minimum: 0
+          example: 2
+    MovieList:
+      type: object
+      additionalProperties: false
+      required:
+      - movies
+      - meta
+      properties:
+        movies:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Movie"
+        meta:
+          "$ref": "#/components/schemas/PaginationMeta"
+    MovieResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - movie
+      properties:
+        movie:
+          "$ref": "#/components/schemas/MovieDetail"
+    ReviewList:
+      type: object
+      additionalProperties: false
+      required:
+      - reviews
+      - meta
+      properties:
+        reviews:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Review"
+        meta:
+          "$ref": "#/components/schemas/PaginationMeta"
+    Credentials:
+      type: object
+      additionalProperties: false
+      required:
+      - email_address
+      - password
+      properties:
+        email_address:
+          type: string
+          format: email
+          example: demo@example.com
+        password:
+          type: string
+          format: password
+          example: demo-password-123
+    Token:
+      type: object
+      additionalProperties: false
+      required:
+      - token
+      - token_type
+      - expires_at
+      properties:
+        token:
+          type: string
+          example: q0dD3pXr8m5aW1nL7cT2vY9bK4sE6fH0jG3uZ8xN1oA
+          description: Shown once; only a digest is stored
+        token_type:
+          type: string
+          enum:
+          - Bearer
+          example: Bearer
+        expires_at:
+          type: string
+          format: date-time
+          example: '2026-11-07T10:00:00.000Z'
+    Error:
+      type: object
+      additionalProperties: false
+      required:
+      - error
+      properties:
+        error:
+          type: string
+          example: Not found
+paths:
+  "/api/v1/movies":
+    get:
+      summary: List movies
+      tags:
+      - Movies
+      description: Paginated movies, best rated first by default. Movies without reviews
+        come last in both rating orders.
+      operationId: listMovies
+      parameters:
+      - name: actor
+        in: query
+        required: false
+        description: Only movies with an actor whose name contains this text (case-insensitive)
+        schema:
+          type: string
+          maxLength: 100
+      - name: sort
+        in: query
+        required: false
+        description: Unknown values fall back to rating_desc
+        schema:
+          type: string
+          enum:
+          - rating_desc
+          - rating_asc
+          - title
+          default: rating_desc
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      responses:
+        '200':
+          description: A page of movies
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/MovieList"
+        '401':
+          description: Missing, invalid or expired token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+  "/api/v1/movies/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Show a movie
+      tags:
+      - Movies
+      description: One movie with its filming locations. Reviews are listed at /api/v1/movies/{id}/reviews.
+      operationId: getMovie
+      responses:
+        '200':
+          description: The movie
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/MovieResponse"
+        '404':
+          description: No movie with this id
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '401':
+          description: Missing, invalid or expired token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+  "/api/v1/movies/{movie_id}/reviews":
+    parameters:
+    - name: movie_id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: List a movie's reviews
+      tags:
+      - Reviews
+      description: Paginated reviews of one movie, newest first.
+      operationId: listMovieReviews
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+      responses:
+        '200':
+          description: A page of reviews
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ReviewList"
+        '404':
+          description: No movie with this id
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+        '401':
+          description: Missing, invalid or expired token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+  "/api/v1/tokens":
+    post:
+      summary: Create a token
+      tags:
+      - Authentication
+      description: Exchanges an email address and password for a bearer token, valid
+        for 30 days. The token is shown only in this response.
+      operationId: createToken
+      security: []
+      parameters: []
+      responses:
+        '201':
+          description: Token created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Token"
+        '401':
+          description: Wrong email address or password
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Credentials"
+    delete:
+      summary: Revoke the current token
+      tags:
+      - Authentication
+      description: Revokes the token sent in the Authorization header. Other tokens
+        stay valid.
+      operationId: revokeToken
+      responses:
+        '204':
+          description: Token revoked
+        '401':
+          description: Missing, invalid or expired token
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Error"
