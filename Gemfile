@@ -53,3 +53,5 @@ gem "bcrypt", "~> 3.1"
 gem "letter_opener", "~> 1.10", group: :development
 
 gem "letter_opener_web", "~> 3.0", group: :development
+
+gem "dotenv-rails", "~> 3.2", groups: [ :development, :test ]
