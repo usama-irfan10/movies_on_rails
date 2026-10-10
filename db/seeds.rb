@@ -1,9 +1,9 @@
-# This file should ensure the existence of records required to run the application in every environment (production,
-# development, test). The code here should be idempotent so that it can be executed at any point in every environment.
-# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Example:
-#
-#   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
-#     MovieGenre.find_or_create_by!(name: genre_name)
-#   end
+# Loads the bundled catalog so a fresh database (bin/rails db:setup, or the first
+# `docker compose up`) is ready to use. Safe to run repeatedly.
+unless Rails.env.test?
+  summary = MovieCatalogImporter.call(
+    movies_path: Rails.root.join("db/data/movies.csv"),
+    reviews_path: Rails.root.join("db/data/reviews.csv")
+  )
+  puts "Seeded #{summary.movies} movies and #{summary.reviews} reviews."
+end

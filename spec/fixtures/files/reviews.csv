@@ -1,0 +1,10 @@
+Movie,User,Stars,Review
+Heist,Sam,5,Great
+heist,Pat,3,Fine
+Heist,SAM,4,Changed my mind
+Voyage,Sam,2,
+Ghost,Sam,5,Unknown movie
+Heist,Lee,9,Out of range
+Heist,,4,No user
+Voyage,Kim,4.5,Half star
+Lonely,Kim,04,Leading zero
