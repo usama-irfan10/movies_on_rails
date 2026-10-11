@@ -3,11 +3,9 @@ Rails.application.routes.draw do
   # the inbox credentials are set (see config/initializers/action_mailer.rb).
   mount LetterOpenerWeb::Engine, at: "/letter_opener" if MailInbox.enabled?
 
-  # API documentation (Swagger UI); the rswag gems are not installed in production.
-  unless Rails.env.production?
-    mount Rswag::Ui::Engine => "/api-docs"
-    mount Rswag::Api::Engine => "/api-docs"
-  end
+  # API documentation: Swagger UI and the OpenAPI document (see config/initializers/rswag.rb).
+  mount Rswag::Ui::Engine => "/api-docs"
+  mount Rswag::Api::Engine => "/api-docs"
 
   resource :session, only: %i[new create destroy]
   resources :passwords, param: :token, only: %i[new create edit update]

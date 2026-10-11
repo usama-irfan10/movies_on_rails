@@ -56,6 +56,7 @@ gem "letter_opener_web", "~> 3.0"
 
 gem "dotenv-rails", "~> 3.2", groups: [ :development, :test ]
 
-gem "rswag-api", "~> 2.17", groups: [ :development, :test ]
-gem "rswag-ui", "~> 2.17", groups: [ :development, :test ]
+# Serves swagger/v1/openapi.yaml and Swagger UI at /api-docs (all environments)
+gem "rswag-api", "~> 2.17"
+gem "rswag-ui", "~> 2.17"
 gem "rswag-specs", "~> 2.17", groups: [ :development, :test ]

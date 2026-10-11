@@ -26,7 +26,8 @@ overview, and a token-protected JSON API. Rails 8 · PostgreSQL · RSpec · Acti
 
 **https://movies-on-rails.onrender.com** - sign in with `demo@example.com` /
 `demo-password-123`. The API works the same way (`POST /api/v1/tokens` with those
-credentials returns a bearer token).
+credentials returns a bearer token); try it in Swagger UI at
+https://movies-on-rails.onrender.com/api-docs.
 
 It runs on Render's free plan (see [Deploying to Render](#deploying-to-render)): after 15
 idle minutes the app sleeps, so the first request can take about a minute.
@@ -122,7 +123,7 @@ Prefix with `docker compose run --rm web` to run inside Docker.
 | Sign in / out | `/session/new` |
 | Reset a forgotten password | `/passwords/new` |
 | Emails sent in development (Docker only) | `/letter_opener` |
-| Interactive API docs (Swagger UI; not in production) | `/api-docs` |
+| Interactive API docs (Swagger UI) | `/api-docs` |
 | Health check (public) | `/up` |
 
 All pages except sign-in, password reset and the health check require a login. There is no
@@ -212,8 +213,9 @@ movie cannot produce an unbounded response.
 ## API documentation (OpenAPI)
 
 The API is described in [`swagger/v1/openapi.yaml`](swagger/v1/openapi.yaml) (OpenAPI 3.0).
-With the server running, open http://localhost:3000/api-docs for Swagger UI: click
-**Authorize**, paste a token from `POST /api/v1/tokens`, and try each endpoint.
+Swagger UI is served at `/api-docs` (locally http://localhost:3000/api-docs, live
+https://movies-on-rails.onrender.com/api-docs): call `POST /api/v1/tokens` with the demo
+account, click **Authorize**, paste the token, and try each endpoint.
 
 The document is generated, not hand-written. The specs in `spec/api` describe every endpoint
 with [rswag](https://github.com/rswag/rswag), and running them checks each real response
@@ -226,9 +228,9 @@ RAILS_ENV=test bin/rails rswag:specs:swaggerize     # rewrite swagger/v1/openapi
 ```
 
 CI fails if the committed document is out of date. The response schemas live in
-`spec/swagger_helper.rb`. Swagger UI is not mounted in production, because the rswag gems
-are only installed for development and test; the YAML file can be opened in any OpenAPI
-viewer (for example https://editor.swagger.io).
+`spec/swagger_helper.rb`. The YAML file can also be opened in any OpenAPI viewer (for
+example https://editor.swagger.io). Swagger UI's page needs inline scripts, so it sends its
+own, looser Content-Security-Policy; every other page keeps the strict one.
 
 ## Authentication
 
