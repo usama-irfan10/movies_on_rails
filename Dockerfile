@@ -38,8 +38,10 @@ RUN apt-get update -qq && \
 # Install application gems
 COPY vendor/* ./vendor/
 COPY Gemfile Gemfile.lock ./
+# Limit parallel gem builds so a local `docker build` does not take every CPU core.
+ARG BUNDLE_JOBS=2
 
-RUN bundle install && \
+RUN bundle install --jobs "$BUNDLE_JOBS" && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
     # -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495
     bundle exec bootsnap precompile -j 1 --gemfile

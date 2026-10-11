@@ -8,7 +8,11 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 WORKDIR /rails
+# BUNDLE_JOBS caps parallel gem installs (and native extension builds) so building
+# the image does not take every CPU core; docker-compose.yml passes it through.
+ARG BUNDLE_JOBS=2
 ENV BUNDLE_PATH=/usr/local/bundle \
+    BUNDLE_JOBS=${BUNDLE_JOBS} \
     DOCKER=1
 
 COPY Gemfile Gemfile.lock ./

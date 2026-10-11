@@ -41,6 +41,10 @@ Run other commands in a second terminal, for example
 Password-reset emails cannot open a browser from inside a container, so they are listed at
 http://localhost:3000/letter_opener.
 
+The containers are capped at 2 CPU cores for the app and 1 for PostgreSQL, and image builds
+install at most 2 gems in parallel, so a laptop stays responsive. Adjust `DOCKER_CPUS`,
+`DOCKER_DB_CPUS` and `BUNDLE_JOBS` in `.env` (lower on a small machine, higher for speed).
+
 ## Quick start without Docker
 
 Requires Ruby (see `.ruby-version`), PostgreSQL running locally, and Bundler.

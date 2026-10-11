@@ -1,8 +1,10 @@
 # Local development and test environment: `docker compose up`
-# Optional overrides (all have defaults): POSTGRES_PASSWORD, APP_PORT - see .env.example
+# Optional overrides (all have defaults): POSTGRES_PASSWORD, APP_PORT, DOCKER_CPUS,
+# BUNDLE_JOBS - see .env.example
 services:
   db:
     image: postgres:16
+    cpus: ${DOCKER_DB_CPUS:-1}
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -18,6 +20,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
+      args:
+        BUNDLE_JOBS: ${BUNDLE_JOBS:-2}
+    # Caps the CPU the app, specs and `bundle install` can use, so the machine stays responsive.
+    cpus: ${DOCKER_CPUS:-2}
     command: >
       bash -c "rm -f tmp/pids/server.pid &&
                (bundle check || bundle install) &&

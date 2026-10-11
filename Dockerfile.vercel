@@ -31,7 +31,9 @@ RUN apt-get update -qq && \
 
 COPY vendor/* ./vendor/
 COPY Gemfile Gemfile.lock ./
-RUN bundle install && \
+# Limit parallel gem builds so a local `docker build` does not take every CPU core.
+ARG BUNDLE_JOBS=2
+RUN bundle install --jobs "$BUNDLE_JOBS" && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git
 
 COPY . .
