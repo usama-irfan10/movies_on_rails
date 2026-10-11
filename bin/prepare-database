@@ -1,0 +1,16 @@
+#!/bin/bash -e
+# Prepares the database when a container starts (bin/docker-entrypoint, bin/vercel-start).
+#
+# On an empty database `db:prepare` creates the schema and seeds it (the bundled CSV
+# catalog, plus the demo account when SEED_DEMO_USER=true); otherwise it migrates.
+# When the newest migration has already run there is nothing to do, so the check is
+# made with psql first: that saves a full Rails boot on every start of a sleeping app.
+
+latest_migration=$(ls db/migrate | sort | tail -1 | cut -d_ -f1)
+
+if [ -n "$DATABASE_URL" ] &&
+   psql "$DATABASE_URL" -tAc "SELECT 1 FROM schema_migrations WHERE version = '$latest_migration'" 2>/dev/null | grep -q 1; then
+  echo "Database is up to date."
+else
+  ./bin/rails db:prepare
+fi

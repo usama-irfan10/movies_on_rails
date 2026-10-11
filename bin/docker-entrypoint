@@ -1,8 +1,11 @@
 #!/bin/bash -e
 
+# Links in emails use the platform's public host name unless APP_HOST is set (Render).
+export APP_HOST="${APP_HOST:-$RENDER_EXTERNAL_HOSTNAME}"
+
 # If running the rails server then create or migrate existing database
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
-  ./bin/rails db:prepare
+  ./bin/prepare-database
 fi
 
 exec "${@}"

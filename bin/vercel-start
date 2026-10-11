@@ -8,15 +8,21 @@ export APP_HOST="${APP_HOST:-$VERCEL_PROJECT_PRODUCTION_URL}"
 # Also answer on the per-deployment and per-branch URLs.
 export ADDITIONAL_HOSTS="${ADDITIONAL_HOSTS:-$VERCEL_URL,$VERCEL_BRANCH_URL}"
 # Neon's direct (unpooled) connection: migrations and the importer use advisory locks,
-# which do not work through a transaction-mode connection pooler.
-export DATABASE_URL="${DATABASE_URL_UNPOOLED:-$DATABASE_URL}"
-
-# Prepare the database only when the newest migration has not run yet: on an empty
-# database db:prepare creates the schema and loads the catalog, otherwise it migrates.
-# Skipping it on warm databases saves a second Rails boot on every cold start.
-latest_migration=$(ls db/migrate | sort | tail -1 | cut -d_ -f1)
-if ! psql "$DATABASE_URL" -tAc "SELECT 1 FROM schema_migrations WHERE version = '$latest_migration'" 2>/dev/null | grep -q 1; then
-  ./bin/rails db:prepare
+# which do not work through a transaction-mode connection pooler. When the Marketplace
+# prefixed the variable names, DATABASE_URL_FROM names the one to use
+# (e.g. DATABASE_URL_FROM=movies_DATABASE_URL_UNPOOLED).
+if [ -n "$DATABASE_URL_FROM" ]; then
+  DATABASE_URL_UNPOOLED="${!DATABASE_URL_FROM}"
 fi
+export DATABASE_URL="${DATABASE_URL_UNPOOLED:-$DATABASE_URL}"
+# SECRET_KEY_BASE belongs in the project settings. Without it, derive a stable key from
+# the database URL (a secret only the platform knows), so every instance signs alike.
+if [ -z "$SECRET_KEY_BASE" ]; then
+  echo "SECRET_KEY_BASE is not set; deriving it from DATABASE_URL."
+  SECRET_KEY_BASE=$(printf 'movies_on_rails/secret_key_base/%s' "$DATABASE_URL" | sha512sum | cut -d' ' -f1)
+  export SECRET_KEY_BASE
+fi
+
+./bin/prepare-database
 
 exec bundle exec puma -C config/puma.rb

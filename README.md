@@ -332,6 +332,23 @@ a PostgreSQL service, and checks that `swagger/v1/openapi.yaml` matches the spec
   adapter is fine for one server. Use a real queue adapter if you scale out.
 - Schedule `bin/rails auth:prune` daily.
 
+### Deploying to Render
+
+`render.yaml` is a [Render Blueprint](https://render.com/docs/blueprint-spec): a free web
+service built from `./Dockerfile` and a free PostgreSQL database.
+
+1. In Render, choose **New > Blueprint** and select this repository.
+2. Render creates the database, generates `SECRET_KEY_BASE`, sets `DATABASE_URL` and
+   `SEED_DEMO_USER=true`, and asks for `MAIL_INBOX_PASSWORD` (leave it empty to keep the email
+   inbox off). `APP_HOST` defaults to the service's `onrender.com` host name.
+3. On start, `bin/docker-entrypoint` runs `bin/prepare-database`: on the empty database
+   `db:prepare` creates the schema, imports the bundled CSV files and adds the demo account;
+   later starts skip it unless a migration is pending.
+
+Free services sleep after 15 idle minutes (the next request takes about a minute), and
+Render deletes free databases 30 days after creation. To keep the data longer, point
+`DATABASE_URL` at another PostgreSQL database, for example a free Neon one.
+
 ### Deploying to Vercel
 
 `Dockerfile.vercel` runs the app on [Vercel's container runtime](https://vercel.com/docs/functions/runtimes/container),
@@ -341,12 +358,14 @@ with a free [Neon](https://neon.com) Postgres database from the Vercel Marketpla
    detects `Dockerfile.vercel`).
 2. In the project's **Storage** tab, add a Neon database. It sets `DATABASE_URL` and
    `DATABASE_URL_UNPOOLED`; the app uses the unpooled one.
-3. Add environment variables: `SECRET_KEY_BASE` (`bin/rails secret`), `PORT=3000`, and
-   optionally `MAIL_INBOX_USERNAME` / `MAIL_INBOX_PASSWORD` for the email inbox.
-   `APP_HOST` defaults to the project's production domain.
-4. Deploy. On start, `bin/vercel-start` runs `bin/rails db:prepare`, which creates the schema,
-   imports the bundled CSV files and adds the demo account on an empty database, and only
-   migrates afterwards.
+3. Add environment variables: `PORT=3000`, `APP_HOST` (the production domain, unless system
+   environment variables are exposed), `SECRET_KEY_BASE` (`bin/rails secret`; when missing,
+   `bin/vercel-start` derives one from the database URL), and optionally
+   `MAIL_INBOX_USERNAME` / `MAIL_INBOX_PASSWORD` for the email inbox.
+4. Deploy. On start, `bin/vercel-start` runs `bin/prepare-database` (see Render above).
+
+Vercel bills container image storage, so this needs a Vercel account with a payment method
+(the Hobby plan without one could not create the database or finish the deployment).
 
 Things to know: idle instances stop after a few minutes, so the first request afterwards
 takes a few seconds; rate limits are counted per instance (in-memory cache); and the email
