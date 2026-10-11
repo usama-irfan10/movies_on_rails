@@ -93,6 +93,12 @@ RSpec.describe Movie do
 
       expect(relation.count).to eq(1)
     end
+
+    it "combines with every sort order, including the title order" do
+      Movie::SORT_OPTIONS.each do |sort|
+        expect(described_class.with_actor_matching("nicolas").sorted_by(sort).to_a).to eq([ cage_movie ])
+      end
+    end
   end
 
   describe ".refresh_rating_stats!" do

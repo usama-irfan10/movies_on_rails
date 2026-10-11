@@ -6,7 +6,5 @@ class Actor < ApplicationRecord
 
   # Partial, case-insensitive match. LIKE wildcards in the input are escaped
   # so "%" and "_" are matched literally.
-  def self.matching(term)
-    where("actors.name ILIKE ?", "%#{sanitize_sql_like(term.to_s.squish)}%")
-  end
+  scope :matching, ->(term) { where("actors.name ILIKE ?", "%#{sanitize_sql_like(term.to_s.squish)}%") }
 end

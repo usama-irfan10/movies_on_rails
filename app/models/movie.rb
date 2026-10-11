@@ -21,22 +21,25 @@ class Movie < ApplicationRecord
   # Orders by a whitelisted key; anything else falls back to the default, so user
   # input never reaches ORDER BY. Unrated movies come last in both rating orders,
   # and each order matches an index (see the create_movies migration).
-  def self.sorted_by(key)
+  scope :sorted_by, ->(key) {
     case key.to_s
     when "rating_asc" then order(arel_table[:average_stars].asc.nulls_last, arel_table[:id].asc)
     when "title" then order(arel_table[:title].lower.asc)
     else order(arel_table[:average_stars].desc.nulls_last, arel_table[:id].desc)
     end
-  end
+  }
 
-  # Movies with at least one actor whose name contains the term (any case).
-  # A subquery rather than a join returns each movie once, without DISTINCT.
-  def self.with_actor_matching(term)
+  # Movies with at least one actor whose name contains the term (any case); a
+  # blank term returns every movie (a scope that returns nil falls back to `all`).
+  #
+  # A semi-join (WHERE id IN subquery) returns each movie once. A JOIN plus
+  # DISTINCT would dedupe whole rows and reject ORDER BY lower(title), and
+  # DISTINCT ON (movies.id) would force ORDER BY to start with id, breaking the
+  # rating sort and its index.
+  scope :with_actor_matching, ->(term) {
     term = term.to_s.squish.first(MAX_SEARCH_LENGTH)
-    return all if term.empty?
-
-    where(id: MovieActor.where(actor_id: Actor.matching(term).select(:id)).select(:movie_id))
-  end
+    where(id: MovieActor.where(actor_id: Actor.matching(term).select(:id)).select(:movie_id)) if term.present?
+  }
 
   # Recomputes reviews_count and average_stars from the reviews table in one
   # UPDATE. Pass ids to limit the refresh; omit them to refresh every movie.
