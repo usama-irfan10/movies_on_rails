@@ -5,6 +5,7 @@
 Backend for a small movie review platform: CSV import, a searchable and sortable movie
 overview, and a token-protected JSON API. Rails 8 · PostgreSQL · RSpec · ActiveModelSerializers.
 
+- [Live demo](#live-demo)
 - [Quick start with Docker](#quick-start-with-docker)
 - [Quick start without Docker](#quick-start-without-docker)
 - [Configuration](#configuration)
@@ -20,6 +21,15 @@ overview, and a token-protected JSON API. Rails 8 · PostgreSQL · RSpec · Acti
 - [Production notes](#production-notes)
 - [Troubleshooting](#troubleshooting)
 - [Known limitations](#known-limitations)
+
+## Live demo
+
+**https://movies-on-rails.onrender.com** - sign in with `demo@example.com` /
+`demo-password-123`. The API works the same way (`POST /api/v1/tokens` with those
+credentials returns a bearer token).
+
+It runs on Render's free plan (see [Deploying to Render](#deploying-to-render)): after 15
+idle minutes the app sleeps, so the first request can take about a minute.
 
 ## Quick start with Docker
 
@@ -361,11 +371,14 @@ with a free [Neon](https://neon.com) Postgres database from the Vercel Marketpla
 3. Add environment variables: `PORT=3000`, `APP_HOST` (the production domain, unless system
    environment variables are exposed), `SECRET_KEY_BASE` (`bin/rails secret`; when missing,
    `bin/vercel-start` derives one from the database URL), and optionally
-   `MAIL_INBOX_USERNAME` / `MAIL_INBOX_PASSWORD` for the email inbox.
+   `MAIL_INBOX_USERNAME` / `MAIL_INBOX_PASSWORD` for the email inbox. If the Marketplace
+   prefixed the database variables, set `DATABASE_URL_FROM` to the name of the unpooled one
+   (for example `movies_DATABASE_URL_UNPOOLED`).
 4. Deploy. On start, `bin/vercel-start` runs `bin/prepare-database` (see Render above).
 
-Vercel bills container image storage, so this needs a Vercel account with a payment method
-(the Hobby plan without one could not create the database or finish the deployment).
+Status: on a Hobby account the image builds and is pushed, but every deployment so far has
+stopped at the final step with "internal Vercel error" (Container Runtime is in beta), so
+the live demo runs on Render.
 
 Things to know: idle instances stop after a few minutes, so the first request afterwards
 takes a few seconds; rate limits are counted per instance (in-memory cache); and the email

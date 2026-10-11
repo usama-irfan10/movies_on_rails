@@ -23,6 +23,9 @@ services:
         generateValue: true
       - key: SEED_DEMO_USER
         value: "true"
+      # One Puma process (no cluster) fits the free instance's 512 MB best.
+      - key: WEB_CONCURRENCY
+        value: "0"
       # Optional password-protected email inbox at /letter_opener (both values required).
       - key: MAIL_INBOX_USERNAME
         value: dev
